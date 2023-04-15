@@ -5,7 +5,6 @@ and for reordering the presentation of classes to the model.
 E.g. with MNIST: train first on 0, then 0 and 1, then 0, 1, and 2, etc. 
 """
 
-
 from typing import Any, Tuple, Type
 
 import torch
@@ -19,9 +18,12 @@ def as_subset(cls: Type[Dataset]):
     and a __repr__ method that prints the labels.
     """
     class Subset(cls):
-        def __init__(self, *args, labels: Tuple[int, ...], **kwargs):
+        def __init__(self, data, targets, train: bool, labels: Tuple[int, ...], **kwargs):
             self.labels = labels
-            super().__init__(*args, **kwargs)
+            self.data = data
+            self.targets = targets
+
+            self.train = train
 
         def __repr__(self):
             return f"Subset({self.__class__.__name__}, labels={self.labels})"
@@ -43,8 +45,8 @@ def get_filtered_dataset(dataset: Dataset, labels: Tuple[int, ...]):
     Returns a new dataset with only the images and labels in labels.
     """
     dataset_cls = as_subset(type(dataset))
-    return dataset_cls(filter_by_labels(dataset, labels), labels=labels)
-
+    data, targets = zip(*((x, y) for x, y in filter_by_labels(dataset, labels)))
+    return dataset_cls(data, targets, train=dataset.train, labels=labels)  # type: ignore
 
 class SubsetsLoader(DataLoader):
     """
@@ -82,7 +84,6 @@ class SubsetsLoader(DataLoader):
         """
         subsets = tuple(get_filtered_dataset(dataset, labels) for labels in labels_per_subset)
         return cls(subsets, shuffle=True)
-
         
     def __repr__(self):
         return f"SubsetsLoader({self.subsets}, batch_size={self.batch_size}, shuffle={self.shuffle})"
