@@ -1,0 +1,23 @@
+{
+    "os": "Linux-5.4.0-139-generic-x86_64-with-glibc2.31",
+    "python": "3.9.16",
+    "heartbeatAt": "2023-04-15T15:41:35.264537",
+    "startedAt": "2023-04-15T15:41:29.554984",
+    "docker": null,
+    "gpu": "Quadro M4000",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": null,
+    "state": "running",
+    "program": "<python with no main file>",
+    "git": {
+        "remote": "git@github.com:jqhoogland/detecting-phase-transitions.git",
+        "commit": "b87495a15163480bf74caf1d7e676f7e655bcaf1"
+    },
+    "email": "jessequinten@gmail.com",
+    "root": "/home/paperspace/Projects/detecting-phase-transitions",
+    "host": "pshy1l4hc",
+    "username": "paperspace",
+    "executable": "/bin/python3.9"
+}
