@@ -13,6 +13,22 @@ from torch.utils.data import DataLoader, Dataset
 from torchtyping import TensorType
 
 
+def as_subset(cls: Type[Dataset]):
+    """
+    Wrapper for a dataset class that adds a labels attribute to the dataset,
+    and a __repr__ method that prints the labels.
+    """
+    class Subset(cls):
+        def __init__(self, *args, labels: Tuple[int, ...], **kwargs):
+            self.labels = labels
+            super().__init__(*args, **kwargs)
+
+        def __repr__(self):
+            return f"Subset({self.__class__.__name__}, labels={self.labels})"
+    
+    return Subset
+
+
 def filter_by_labels(dataset: Dataset, labels: Tuple[int, ...]):
     """
     Returns an iterator over the dataset, yielding only the images and labels in labels.
@@ -26,38 +42,9 @@ def get_filtered_dataset(dataset: Dataset, labels: Tuple[int, ...]):
     """
     Returns a new dataset with only the images and labels in labels.
     """
-    return type(dataset)(filter_by_labels(dataset, labels))
+    dataset_cls = as_subset(type(dataset))
+    return dataset_cls(filter_by_labels(dataset, labels), labels=labels)
 
-
-def as_subset(cls: Type[Dataset]):
-    """
-    Add
-    """
-
-
-class Subset(Dataset):
-    """
-    A subset of a dataset with specified labels. 
-    Wraps an existing dataset with the 
-    """
-
-    def __init__(self, dataset: Dataset, labels: Tuple[int, ...]):
-        self.dataset = dataset
-        self.labels = labels
-        self.subset = get_filtered_dataset(dataset, labels)
-
-    def __getitem__(self, index):
-        return self.subset[index]
-
-    def __len__(self):
-        return len(self.subset)
-
-    def __repr__(self):
-        return f"Subset({self.dataset}, labels={self.labels})"
-    
-    def __getattribute__(self, __name: str) -> Any:
-        return self.subset.__getattribute__(__name)
-    
 
 class SubsetsLoader(DataLoader):
     """
