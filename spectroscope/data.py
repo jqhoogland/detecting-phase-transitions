@@ -48,7 +48,8 @@ def get_filtered_dataset(dataset: Dataset, labels: Tuple[int, ...]):
     data, targets = zip(*((x, y) for x, y in filter_by_labels(dataset, labels)))
     return dataset_cls(data, targets, train=dataset.train, labels=labels)  # type: ignore
 
-class SubsetsLoader(DataLoader):
+
+class SubsetsLoader:
     """
     A data loader that trains on different subsets of the dataset 
     depending on the active subset.
@@ -64,17 +65,26 @@ class SubsetsLoader(DataLoader):
     ):
         self.subsets = subsets
         self.subset_idx = 0
-        self.dataset = subsets[0]
-
-        super().__init__(self.dataset, *args, **kwargs)
+        self.subloaders = tuple(DataLoader(subset, *args, **kwargs) for subset in subsets)
 
     def next_subset(self):
         """Moves to the next subset."""
         if self.subset_idx < len(self.subsets):
             self.subset_idx += 1
-            self.dataset = self.subsets[self.subset_idx]     
         else:
             raise StopIteration
+        
+    @property
+    def dataset(self):
+        return self.subsets[self.subset_idx]
+    
+    @property
+    def loader(self):
+        return self.subloaders[self.subset_idx]
+    
+    @property
+    def batch_size(self):
+        return self.loader.batch_size
 
     @classmethod
     def from_filters(cls, dataset: Dataset, labels_per_subset: Tuple[Tuple[int, ...]]):
@@ -86,4 +96,7 @@ class SubsetsLoader(DataLoader):
         return cls(subsets, shuffle=True)
         
     def __repr__(self):
-        return f"SubsetsLoader({self.subsets}, batch_size={self.batch_size}, shuffle={self.shuffle})"
+        return f"SubsetsLoader({self.subsets}, batch_size={self.batch_size})"
+    
+    def __iter__(self):
+        return iter(self.subloaders[self.subset_idx])
